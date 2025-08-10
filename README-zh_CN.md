@@ -1,5 +1,7 @@
 # 🚀 Claude Code Env (CCE)
 
+[![NPM version](https://img.shields.io/npm/v/@vainjs/claude-code-env.svg?style=flat)](https://npmjs.org/package/@vainjs/claude-code-env) [![NPM downloads](http://img.shields.io/npm/dm/@vainjs/claude-code-env.svg?style=flat)](https://npmjs.org/package/@vainjs/claude-code-env)
+
 简体中文 | [English](./README.md)
 
 轻松管理多个 anthropic 规范的 API，可一键切换不同模型

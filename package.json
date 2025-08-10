@@ -1,6 +1,6 @@
 {
-  "name": "claude-code-env",
-  "version": "0.0.0",
+  "name": "@vainjs/claude-code-env",
+  "version": "0.1.0",
   "description": "CLI tool for managing Claude Code model configurations",
   "type": "module",
   "packageManager": "pnpm@10.14.0",
@@ -27,6 +27,7 @@
   "files": [
     "dist",
     "package.json",
+    "README-zh_CN.md",
     "README.md"
   ],
   "sideEffects": false,

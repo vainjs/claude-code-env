@@ -1,5 +1,7 @@
 # 🚀 Claude Code Env (CCE)
 
+[![NPM version](https://img.shields.io/npm/v/@vainjs/claude-code-env.svg?style=flat)](https://npmjs.org/package/@vainjs/claude-code-env) [![NPM downloads](http://img.shields.io/npm/dm/@vainjs/claude-code-env.svg?style=flat)](https://npmjs.org/package/@vainjs/claude-code-env)
+
 English ｜ [简体中文](./README-zh_CN.md)
 
 Easily manage multiple anthropic specification model apis and switch between models with one command
@@ -9,11 +11,11 @@ Easily manage multiple anthropic specification model apis and switch between mod
 Solve these common Claude Code challenges:
 
 - ✅ **Multiple API endpoints** - Switch between official API, proxy servers, and enterprise networks
-- ✅ **Environment variable hassles** - No more manual editing of `ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN`
+- ✅ **Environment variable hassles** - No mclaude-code-env manual editing of `ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN`
 - ✅ **Configuration errors** - Eliminate copy-paste mistakes with tokens and URLs
 - ✅ **Team collaboration** - Share and sync configurations easily
 
-## ⚡ Core Features
+## ⚡ Cclaude-code-env Features
 
 #### One-Command Configuration
 
@@ -82,7 +84,7 @@ cce use haiku   # Simple tasks
 
 ## 📁 Configuration Structure
 
-All configurations stored in `~/.claude-code-env.json`:
+All configurations stclaude-code-envd in `~/.claude-code-env.json`:
 
 ```json
 {
