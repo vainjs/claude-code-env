@@ -1,33 +1,53 @@
-# 🚀 Claude Code Env (CCE)
+# Claude Code Env (CCE)
 
 [![NPM version](https://img.shields.io/npm/v/@vainjs/claude-code-env.svg?style=flat)](https://npmjs.org/package/@vainjs/claude-code-env) [![NPM downloads](http://img.shields.io/npm/dm/@vainjs/claude-code-env.svg?style=flat)](https://npmjs.org/package/@vainjs/claude-code-env)
 
 English ｜ [简体中文](./README-zh_CN.md)
 
-Easily manage multiple anthropic specification model apis and switch between models with one command
+Are you tired of manually editing environment variables to switch between different models? If you don't want to use `claude-code-router`,
+then `CCE` is a great choice. It's a lightweight command-line tool that allows you to manage and switch between various large models that
+comply with the Anthropic API specification through simple commands.
 
-## 🎯 Why CCE?
+## Why use CCE?
 
-Solve these common Claude Code challenges:
+`CCE` solves common pain points when using `Claude Code`:
 
-- ✅ **Multiple API endpoints** - Switch between official API, proxy servers, and enterprise networks
-- ✅ **Environment variable hassles** - No mclaude-code-env manual editing of `ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN`
-- ✅ **Configuration errors** - Eliminate copy-paste mistakes with tokens and URLs
-- ✅ **Team collaboration** - Share and sync configurations easily
+- ✅ **Multiple models** - Quickly switch between official APIs, proxy servers, and enterprise networks.
+- ✅ **Environment variables** - Avoid frequently editing environment variables like `ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN`.
+- ✅ **Team collaboration** - Easily share and sync configurations with your team.
 
-## ⚡ Cclaude-code-env Features
+## How is it different from claude-code-router?
 
-#### One-Command Configuration
+It should be noted that `CCE` **is not a proxy tool or request router**. It's just a client-side environment variable switcher, whose only job is
+to help you manage and set environment variables (`ANTHROPIC_BASE_URL`, `ANTHROPIC_AUTH_TOKEN`, etc.) for your terminal session. It doesn't
+intercept or forward any of your requests. This also means that the model service it points to (whether it's the official API, third-party
+proxy, or other services) must be compatible with the Anthropic API specification.
+
+## Install
 
 ```bash
-# Add new configuration
-cce add
+pnpm add -g @vainjs/claude-code-env
+```
 
-# Instantly switch to any configuration
+## Core Features
+
+### One-command Configuration
+
+Adding a new model is simple:
+
+```bash
+cce add # Will prompt you to enter model name, address, token, etc.
+```
+
+Switch models anytime:
+
+```bash
 cce use claude
 ```
 
-#### Clear Configuration Overview
+### Clear Configuration Overview
+
+View configuration list:
 
 ```bash
 cce list
@@ -38,69 +58,56 @@ cce list
 
   NAME                     ANTHROPIC_MODEL
   ────────────────────────────────────────────────────────────
-● claude-official          Default
-  claude-proxy             claude-3-5-sonnet-20241022
-  claude-enterprise        Default
+● claude                   Default
+  kimi-k2                  moonshotai/Kimi-K2-Instruct
 
-Current model: claude-official
+Current model: claude
 ```
 
-#### Real-time Status Monitoring
+### Real-time Status Check
+
+Confirm the environment variables you're actually using:
 
 ```bash
-cce status  # View current configuration and environment variables
+cce status
 ```
 
-## 💡 Use Cases
-
-#### Official API + Proxy Server
+### Managing Configurations for Different Models
 
 ```bash
 # Add official API
 cce add
-# Name: claude-official, URL: https://api.anthropic.com
+# Name: claude, URL: https://api.anthropic.com
 
-# Add proxy server
+# Add third-party server
 cce add
-# Name: claude-proxy, URL: https://your-proxy.com/v1
+# Name: kimi-k2, URL: https://api.siliconflow.cn
 
 # Quick switching
-cce use claude-proxy    # Use proxy
-cce use claude-official # Use official
+cce use claude
+cce use kimi-k2
 ```
 
-#### Different Model Configurations
+## Configuration Structure
 
-```bash
-# Sonnet for complex tasks
-cce add  # Name: sonnet, Model: claude-3-5-sonnet-20241022
-
-# Haiku for simple tasks
-cce add  # Name: haiku, Model: claude-3-5-haiku-20241022
-
-cce use sonnet  # Complex tasks
-cce use haiku   # Simple tasks
-```
-
-## 📁 Configuration Structure
-
-All configurations stclaude-code-envd in `~/.claude-code-env.json`:
+All configurations are saved in the `~/.claude-code-env.json` file with the following format:
 
 ```json
 {
   "models": [
     {
-      "name": "claude-official",
+      "name": "claude",
       "ANTHROPIC_BASE_URL": "https://api.anthropic.com",
       "ANTHROPIC_AUTH_TOKEN": "sk-ant-xxx",
-      "description": "Official API"
+      "description": "official API"
     },
     {
-      "name": "claude-proxy",
-      "ANTHROPIC_BASE_URL": "https://your-proxy.com/v1",
-      "ANTHROPIC_AUTH_TOKEN": "proxy-token",
-      "ANTHROPIC_MODEL": "claude-3-5-sonnet-20241022"
+      "name": "kimi-k2",
+      "ANTHROPIC_BASE_URL": "https://api.siliconflow.cn",
+      "ANTHROPIC_AUTH_TOKEN": "sk-mcki-xxx",
+      "ANTHROPIC_MODEL": "moonshotai/Kimi-K2-Instruct"
     }
-  ]
+  ],
+  "currentModel": "claude"
 }
 ```

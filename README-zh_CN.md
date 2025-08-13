@@ -1,35 +1,48 @@
-# 🚀 Claude Code Env (CCE)
+# Claude Code Env (CCE)
 
 [![NPM version](https://img.shields.io/npm/v/@vainjs/claude-code-env.svg?style=flat)](https://npmjs.org/package/@vainjs/claude-code-env) [![NPM downloads](http://img.shields.io/npm/dm/@vainjs/claude-code-env.svg?style=flat)](https://npmjs.org/package/@vainjs/claude-code-env)
 
-简体中文 | [English](./README.md)
+简体中文 ｜ [English](./README.md)
 
-轻松管理多个 anthropic 规范的 API，可一键切换不同模型
+你是否厌倦了手动编辑环境变量来切换不同的模型？如果你不想使用 `claude-code-router`，那么 `CCE` 是一个不错的选择，它是一个轻便的命令行工具，让你能够通过简单的命令去管理和切换各种 Anthropic 接口规范的大模型。
 
-## 🎯 为什么需要 CCE？
+## 为什么用 CCE？
 
-如果你在使用 Claude Code 时遇到过这些问题：
+`CCE` 解决了使用 `Claude Code` 时常见的烦恼：
 
-- ✅ **多个 API 端点管理困难** - 需要在官方 API、代理服务器、企业内网之间切换
-- ✅ **环境变量设置繁琐** - 每次切换都要手动修改 `ANTHROPIC_BASE_URL` 和 `ANTHROPIC_AUTH_TOKEN`
-- ✅ **配置容易出错** - 手动复制粘贴 token 和 URL 容易出错
-- ✅ **团队协作困难** - 无法快速分享和同步配置
+- ✅ **多个模型** - 在官方 API、代理服务器和企业网络之间快速切换。
+- ✅ **环境变量** - 避免频繁编辑 `ANTHROPIC_BASE_URL` 和 `ANTHROPIC_AUTH_TOKEN` 等环境变量。
+- ✅ **团队协作** - 轻松与团队共享和同步配置。
 
-那么 CCE 就是你需要的解决方案！
+## 它和 claude-code-router 有什么不同？
 
-## ⚡ 核心特性
+需要说明的是，`CCE` **不是代理工具也不是请求路由器**。它就是个客户端环境变量切换器，唯一的工作就是帮你管理和设置终端会话的环境变量（`ANTHROPIC_BASE_URL`、`ANTHROPIC_AUTH_TOKEN` 等）。它不会去拦截或转发你的任何请求。这样也就意味着它指向的模型服务（不管是官方 API、第三方代理还是其他服务）必须兼容 Anthropic API 规范。
 
-#### 一键配置管理
+## 快速安装
 
 ```bash
-# 添加新配置只需一条命令
-cce add
+pnpm add -g @vainjs/claude-code-env
+```
 
-# 瞬间切换到任意配置
+## 核心功能
+
+### 一键配置
+
+添加新模型很简单：
+
+```bash
+cce add # 会提示你输入模型名称、地址、令牌等
+```
+
+随时切换模型：
+
+```bash
 cce use claude
 ```
 
-#### 直观的配置列表
+### 配置一目了然
+
+查看配置列表：
 
 ```bash
 cce list
@@ -40,82 +53,56 @@ cce list
 
   NAME                     ANTHROPIC_MODEL
   ────────────────────────────────────────────────────────────
-● claude-official          Default
-  claude-proxy             claude-3-5-sonnet-20241022
-  claude-enterprise        Default
+● claude                   Default
+  kimi-k2                  moonshotai/Kimi-K2-Instruct
 
-Current model: claude-official
+Current model: claude
 ```
 
-#### 实时状态监控
+### 实时状态检查
+
+确认你实际使用的环境变量：
 
 ```bash
 cce status
 ```
 
-查看当前配置详情和环境变量状态
-
-## 💡 典型使用场景
-
-#### 官方 API + 代理服务器
+### 管理不同模型的配置
 
 ```bash
 # 添加官方 API
 cce add
-# Name: claude-official
-# ANTHROPIC_BASE_URL: https://api.anthropic.com
-# ANTHROPIC_AUTH_TOKEN: sk-ant-xxx
+# 名称：claude，地址：https://api.anthropic.com
 
-# 添加代理服务器
+# 添加第三方服务
 cce add
-# Name: claude-proxy
-# ANTHROPIC_BASE_URL: https://your-proxy.com/v1
-# ANTHROPIC_AUTH_TOKEN: your-proxy-token
+# 名称：kimi-k2，地址：https://api.siliconflow.cn
 
 # 快速切换
-cce use claude-proxy    # 使用代理
-cce use claude-official # 使用官方
+cce use claude
+cce use kimi-k2
 ```
 
-#### 不同模型配置
+## 配置结构
 
-```bash
-# Sonnet 模型配置
-cce add
-# Name: sonnet
-# ANTHROPIC_MODEL: claude-3-5-sonnet-20241022
-
-# Haiku 模型配置
-cce add
-# Name: haiku
-# ANTHROPIC_MODEL: claude-3-5-haiku-20241022
-
-# 根据任务选择模型
-cce use sonnet  # 复杂任务
-cce use haiku   # 简单任务
-```
-
-## 📁 配置文件结构
-
-CCE 将所有配置保存在 `~/.claude-code-env.json`:
+所有配置都保存在 `~/.claude-code-env.json` 文件，格式如下：
 
 ```json
 {
   "models": [
     {
-      "name": "claude-official",
+      "name": "claude",
       "ANTHROPIC_BASE_URL": "https://api.anthropic.com",
       "ANTHROPIC_AUTH_TOKEN": "sk-ant-xxx",
-      "description": "官方 API"
+      "description": "official API"
     },
     {
-      "name": "claude-proxy",
-      "ANTHROPIC_BASE_URL": "https://your-proxy.com/v1",
-      "ANTHROPIC_AUTH_TOKEN": "proxy-token",
-      "ANTHROPIC_MODEL": "claude-3-5-sonnet-20241022",
-      "description": "代理服务器"
+      "name": "kimi-k2",
+      "ANTHROPIC_BASE_URL": "https://api.siliconflow.cn",
+      "ANTHROPIC_AUTH_TOKEN": "sk-mcki-xxx",
+      "ANTHROPIC_MODEL": "moonshotai/Kimi-K2-Instruct"
     }
   ],
-  "currentModel": "claude-official"
+  "currentModel": "claude"
 }
 ```

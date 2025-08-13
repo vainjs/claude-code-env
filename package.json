@@ -1,7 +1,7 @@
 {
   "name": "@vainjs/claude-code-env",
   "version": "0.1.0",
-  "description": "CLI tool for managing Claude Code model configurations",
+  "description": "Easily manage multiple anthropic specification model apis and switch between models with one command",
   "type": "module",
   "packageManager": "pnpm@10.14.0",
   "engines": {
@@ -11,24 +11,24 @@
     "cce": "dist/bundle.js"
   },
   "scripts": {
-    "build": "rolldown -c",
-    "prepare": "husky",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
     "preinstall": "npx only-allow pnpm",
-    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
+    "build": "rolldown -c",
+    "prepare": "husky"
   },
   "keywords": [
-    "claude",
+    "claude-code-env",
     "claude code",
-    "cli",
-    "anthropic"
+    "anthropic",
+    "claude"
   ],
-  "author": "",
+  "author": "young",
   "license": "Apache-2.0",
   "files": [
-    "dist",
-    "package.json",
     "README-zh_CN.md",
-    "README.md"
+    "package.json",
+    "README.md",
+    "dist"
   ],
   "sideEffects": false,
   "devDependencies": {
