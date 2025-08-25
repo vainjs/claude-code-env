@@ -146,19 +146,43 @@ program
 program
   .command('use')
   .description('Use a specific model')
-  .argument('<model>', 'Model name to use')
+  .argument('[model]', 'Model name to use')
   .action(async (modelName) => {
     try {
       const models = configManager.getModels()
-      const model = models.find((m) => m.name === modelName)
+
+      if (models.length === 0) {
+        console.log(chalk.yellow('■ No models configured.'))
+        console.log(chalk.dim('  ↳ Add models first using "cce add"'))
+        return
+      }
+
+      let targetModelName = modelName
+
+      if (!targetModelName) {
+        const { selectedModel } = await inquirer.prompt([
+          {
+            type: 'list',
+            name: 'selectedModel',
+            message: 'Select a model to use:',
+            choices: models.map((model) => ({
+              name: model.name,
+              value: model.name,
+            })),
+          },
+        ])
+        targetModelName = selectedModel
+      }
+
+      const model = models.find((m) => m.name === targetModelName)
 
       if (!model) {
-        console.error(chalk.red(`✗ Model "${modelName}" not found`))
+        console.error(chalk.red(`✗ Model "${targetModelName}" not found`))
         console.log(chalk.dim('  ↳ Run "cce list" to see available models'))
         return
       }
 
-      configManager.setCurrentModel(modelName)
+      configManager.setCurrentModel(targetModelName)
       envManager.setEnvironmentVariables(model)
     } catch (error) {
       console.error(chalk.red('✗ Error:'), error)
@@ -171,7 +195,8 @@ program
   .command('remove')
   .alias('rm')
   .description('Remove a model configuration')
-  .action(async () => {
+  .argument('[model]', 'Model name to remove')
+  .action(async (modelName) => {
     try {
       const models = configManager.getModels()
 
@@ -181,17 +206,30 @@ program
         return
       }
 
-      const { modelToRemove } = await inquirer.prompt([
-        {
-          type: 'list',
-          name: 'modelToRemove',
-          message: 'Select a model to remove:',
-          choices: models.map((model) => ({
-            name: model.name,
-            value: model.name,
-          })),
-        },
-      ])
+      let modelToRemove = modelName
+
+      if (!modelToRemove) {
+        const { selectedModel } = await inquirer.prompt([
+          {
+            type: 'list',
+            name: 'selectedModel',
+            message: 'Select a model to remove:',
+            choices: models.map((model) => ({
+              name: model.name,
+              value: model.name,
+            })),
+          },
+        ])
+        modelToRemove = selectedModel
+      }
+
+      const model = models.find((m) => m.name === modelToRemove)
+
+      if (!model) {
+        console.error(chalk.red(`✗ Model "${modelToRemove}" not found`))
+        console.log(chalk.dim('  ↳ Run "cce list" to see available models'))
+        return
+      }
 
       const { confirm } = await inquirer.prompt([
         {
