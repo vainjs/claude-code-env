@@ -23,7 +23,7 @@ export class EnvironmentManager {
     fish: {
       configPath: '.config/fish/config.fish',
       envSyntax: (key: string, value: string) => `set -gx ${key} "${value}"`,
-      envPrefix: 'set -x ',
+      envPrefix: 'set -gx ',
     },
   } as const
 
