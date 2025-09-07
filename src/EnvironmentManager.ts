@@ -9,6 +9,24 @@ import { ConfigManager } from './ConfigManager'
 export class EnvironmentManager {
   private configManager: ConfigManager
 
+  private shellConfigs = {
+    bash: {
+      configPath: '.bashrc',
+      envSyntax: (key: string, value: string) => `export ${key}="${value}"`,
+      envPrefix: 'export ',
+    },
+    zsh: {
+      configPath: '.zshrc',
+      envSyntax: (key: string, value: string) => `export ${key}="${value}"`,
+      envPrefix: 'export ',
+    },
+    fish: {
+      configPath: '.config/fish/config.fish',
+      envSyntax: (key: string, value: string) => `set -gx ${key} "${value}"`,
+      envPrefix: 'set -x ',
+    },
+  } as const
+
   constructor() {
     this.configManager = new ConfigManager()
   }
@@ -19,20 +37,32 @@ export class EnvironmentManager {
 
   private getShellConfigPath(shell: string): string {
     const homeDir = os.homedir()
-    switch (shell) {
-      case 'bash':
-        return path.join(homeDir, '.bashrc')
-      case 'zsh':
-        return path.join(homeDir, '.zshrc')
-      default:
-        throw new Error(`Unsupported shell: ${shell}`)
+    const config = this.shellConfigs[shell as keyof typeof this.shellConfigs]
+    if (!config) {
+      throw new Error(`Unsupported shell: ${shell}`)
     }
+    return path.join(homeDir, config.configPath)
+  }
+
+  private getSourceCommand(shell: string): string {
+    const config = this.shellConfigs[shell as keyof typeof this.shellConfigs]
+    if (!config) {
+      throw new Error(`Unsupported shell: ${shell}`)
+    }
+    return `source ~/${config.configPath}`
   }
 
   private getCurrentShell(): string {
     const shell = process.env.SHELL
     if (!shell) return 'bash'
-    if (includes(shell, 'zsh')) return 'zsh'
+
+    // Check for each supported shell
+    for (const [shellName] of Object.entries(this.shellConfigs)) {
+      if (includes(shell, shellName)) {
+        return shellName
+      }
+    }
+
     return 'bash'
   }
 
@@ -68,6 +98,14 @@ export class EnvironmentManager {
     if (!configPath) return
 
     const envVars = this.configManager.getEnvVars()
+    const shellConfig =
+      this.shellConfigs[currentShell as keyof typeof this.shellConfigs]
+
+    // Ensure config directory exists (mainly for Fish)
+    const configDir = path.dirname(configPath)
+    if (!fs.existsSync(configDir)) {
+      fs.mkdirSync(configDir, { recursive: true })
+    }
 
     let configContent = ''
     if (fs.existsSync(configPath)) {
@@ -75,17 +113,25 @@ export class EnvironmentManager {
     }
 
     const lines = configContent.split('\n')
-    const filteredLines = lines.filter(
-      (line) =>
-        every(envVars, (env) => !line.startsWith(`export ${env.key}=`)) &&
-        !line.includes('# Claude Code Env CLI - Model Configuration')
-    )
+    const filteredLines = lines.filter((line) => {
+      const isCCEComment = line.includes(
+        '# Claude Code Env CLI - Model Configuration'
+      )
+
+      return (
+        !isCCEComment &&
+        every(
+          envVars,
+          (env) => !line.startsWith(`${shellConfig.envPrefix}${env.key}`)
+        )
+      )
+    })
 
     filteredLines.push('# Claude Code Env CLI - Model Configuration')
     forEach(envVars, (env) => {
       const value = this.getModelValue(model, env.key)
       if (value) {
-        filteredLines.push(`export ${env.key}="${value}"`)
+        filteredLines.push(shellConfig.envSyntax(env.key, String(value)))
       }
     })
 
@@ -126,9 +172,7 @@ export class EnvironmentManager {
     console.log(chalk.green(`✓ Updated ${currentShell} configuration`))
     console.log(chalk.dim(`  File: ${this.getShellConfigPath(currentShell)}`))
 
-    const sourceCommand = `source ${
-      currentShell === 'zsh' ? '~/.zshrc' : '~/.bashrc'
-    }`
+    const sourceCommand = this.getSourceCommand(currentShell)
 
     console.log()
     console.log(chalk.yellow('■ Next Step:'))

@@ -120,6 +120,14 @@ cce env remove  # 交互式选择可删除的变量
 
 **注意**：必需的环境变量（`ANTHROPIC_BASE_URL` 和 `ANTHROPIC_AUTH_TOKEN`）无法删除，因为它们对 API 功能至关重要。
 
+## 支持的终端
+
+CCE 支持以下终端并自动检测你当前使用的终端：
+
+- ✅ **Bash** - 使用 `~/.bashrc`
+- ✅ **Zsh** - 使用 `~/.zshrc`
+- ✅ **Fish** - 使用 `~/.config/fish/config.fish`
+
 ## 配置结构
 
 所有配置都保存在 `~/.claude-code-env.json` 文件，格式如下：

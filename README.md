@@ -125,6 +125,14 @@ cce env remove  # Interactive selection of removable variables
 
 **Note**: Required environment variables (`ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN`) cannot be removed as they are essential for API functionality.
 
+## Supported Shells
+
+CCE supports the following shells and automatically detects your current shell:
+
+- ✅ **Bash** - Uses `~/.bashrc`
+- ✅ **Zsh** - Uses `~/.zshrc`
+- ✅ **Fish** - Uses `~/.config/fish/config.fish`
+
 ## Configuration Structure
 
 All configurations are saved in the `~/.claude-code-env.json` file with the following format:
