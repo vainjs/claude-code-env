@@ -1,4 +1,5 @@
 import type { Config, ModelConfig } from './types'
+import { ANTHROPIC_ENV } from './enum'
 import * as path from 'path'
 import * as fs from 'fs'
 import * as os from 'os'
@@ -7,7 +8,8 @@ export class ConfigManager {
   private configPath: string
 
   constructor(configPath?: string) {
-    this.configPath = configPath || path.join(os.homedir(), '.claude-code-env.json')
+    this.configPath =
+      configPath || path.join(os.homedir(), '.claude-code-env.json')
   }
 
   loadConfig(): Config {
@@ -28,6 +30,7 @@ export class ConfigManager {
     const defaultConfig: Config = {
       models: [],
       currentModel: '',
+      envVars: ANTHROPIC_ENV,
     }
 
     this.saveConfig(defaultConfig)
@@ -35,7 +38,11 @@ export class ConfigManager {
 
   saveConfig(config: Config): void {
     try {
-      fs.writeFileSync(this.configPath, JSON.stringify(config, null, 2), 'utf-8')
+      fs.writeFileSync(
+        this.configPath,
+        JSON.stringify(config, null, 2),
+        'utf-8'
+      )
     } catch (error) {
       throw new Error(`Failed to save config to ${this.configPath}: ${error}`)
     }
@@ -90,9 +97,43 @@ export class ConfigManager {
 
     // Reset current model if it was the removed one
     if (config.currentModel === modelName) {
-      config.currentModel = config.models.length > 0 ? config.models[0].name : undefined
+      config.currentModel =
+        config.models.length > 0 ? config.models[0].name : undefined
     }
 
     this.saveConfig(config)
+  }
+
+  getEnvVars(): Array<{ key: string; required: boolean }> {
+    const config = this.loadConfig()
+    return config.envVars || ANTHROPIC_ENV
+  }
+
+  addEnvVar(key: string, required: boolean = false): void {
+    const config = this.loadConfig()
+    if (!config.envVars) {
+      config.envVars = [...ANTHROPIC_ENV]
+    }
+
+    // Check if env var already exists
+    const exists = config.envVars.some((env) => env.key === key)
+    if (!exists) {
+      config.envVars.push({ key, required })
+      this.saveConfig(config)
+    }
+  }
+
+  removeEnvVar(key: string): void {
+    const config = this.loadConfig()
+    if (config.envVars) {
+      // Check if the env var is required
+      const envVar = config.envVars.find((env) => env.key === key)
+      if (envVar?.required) {
+        throw new Error(`Cannot remove required environment variable "${key}"`)
+      }
+
+      config.envVars = config.envVars.filter((env) => env.key !== key)
+      this.saveConfig(config)
+    }
   }
 }

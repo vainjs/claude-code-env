@@ -1,12 +1,22 @@
-import type { AnthropicEnvKey, ModelConfig } from './types'
+import type { ModelConfig } from './types'
 import { includes, forEach, every, pick } from 'lodash-es'
 import * as path from 'path'
 import chalk from 'chalk'
 import * as fs from 'fs'
 import * as os from 'os'
-import { ANTHROPIC_ENV } from './enum'
+import { ConfigManager } from './ConfigManager'
 
 export class EnvironmentManager {
+  private configManager: ConfigManager
+
+  constructor() {
+    this.configManager = new ConfigManager()
+  }
+
+  private getModelValue(model: ModelConfig, key: string) {
+    return model[key]
+  }
+
   private getShellConfigPath(shell: string): string {
     const homeDir = os.homedir()
     switch (shell) {
@@ -34,11 +44,14 @@ export class EnvironmentManager {
     model: ModelConfig,
     shell?: string
   ): Promise<void> {
-    forEach(ANTHROPIC_ENV, (env: AnthropicEnvKey) => {
-      if (model[env]) {
-        process.env[env] = String(model[env])
+    const envVars = this.configManager.getEnvVars()
+
+    forEach(envVars, (env) => {
+      const value = this.getModelValue(model, env.key)
+      if (value) {
+        process.env[env.key] = String(value)
       } else {
-        delete process.env[env]
+        delete process.env[env.key]
       }
     })
 
@@ -54,6 +67,8 @@ export class EnvironmentManager {
     const configPath = this.getShellConfigPath(currentShell)
     if (!configPath) return
 
+    const envVars = this.configManager.getEnvVars()
+
     let configContent = ''
     if (fs.existsSync(configPath)) {
       configContent = fs.readFileSync(configPath, 'utf-8')
@@ -62,16 +77,15 @@ export class EnvironmentManager {
     const lines = configContent.split('\n')
     const filteredLines = lines.filter(
       (line) =>
-        every(
-          ANTHROPIC_ENV,
-          (env: AnthropicEnvKey) => !line.startsWith(`export ${env}=`)
-        ) && !line.includes('# Claude Code Env CLI - Model Configuration')
+        every(envVars, (env) => !line.startsWith(`export ${env.key}=`)) &&
+        !line.includes('# Claude Code Env CLI - Model Configuration')
     )
 
     filteredLines.push('# Claude Code Env CLI - Model Configuration')
-    forEach(ANTHROPIC_ENV, (env: AnthropicEnvKey) => {
-      if (model[env]) {
-        filteredLines.push(`export ${env}="${model[env]}"`)
+    forEach(envVars, (env) => {
+      const value = this.getModelValue(model, env.key)
+      if (value) {
+        filteredLines.push(`export ${env.key}="${value}"`)
       }
     })
 
@@ -91,14 +105,20 @@ export class EnvironmentManager {
       )
     )
 
-    forEach(ANTHROPIC_ENV, (env: AnthropicEnvKey) => {
-      if (model[env]) {
-        if (env === 'ANTHROPIC_AUTH_TOKEN') {
+    const envVars = this.configManager.getEnvVars()
+
+    forEach(envVars, (env) => {
+      const value = this.getModelValue(model, env.key)
+      if (value) {
+        if (env.key === 'ANTHROPIC_AUTH_TOKEN') {
+          const tokenValue = String(value)
           console.log(
-            chalk.dim(`  ${env}=${chalk.cyan(model[env].substring(0, 10))}...`)
+            chalk.dim(
+              `  ${env.key}=${chalk.cyan(tokenValue.substring(0, 10))}...`
+            )
           )
         } else {
-          console.log(chalk.dim(`  ${env}=${chalk.cyan(model[env])}`))
+          console.log(chalk.dim(`  ${env.key}=${chalk.cyan(String(value))}`))
         }
       }
     })
@@ -132,6 +152,8 @@ export class EnvironmentManager {
   }
 
   getCurrentEnvironmentVariables() {
-    return pick(process.env, ANTHROPIC_ENV)
+    const envVars = this.configManager.getEnvVars()
+    const envKeys = envVars.map((env) => env.key)
+    return pick(process.env, envKeys)
   }
 }

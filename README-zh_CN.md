@@ -83,6 +83,43 @@ cce use claude
 cce use kimi-k2
 ```
 
+### 环境变量管理
+
+CCE 现在支持动态环境变量管理，允许你自定义切换模型时使用的环境变量。
+
+#### 查看环境变量
+
+```bash
+cce env
+```
+
+```
+■ Environment Variables
+
+  1. ANTHROPIC_BASE_URL (required)
+  2. ANTHROPIC_AUTH_TOKEN (required)
+  3. ANTHROPIC_MODEL
+  4. ANTHROPIC_MAX_TOKENS
+
+Commands:
+  cce env add <key>    - Add environment variable
+  cce env remove       - Remove environment variable
+```
+
+#### 添加自定义环境变量
+
+```bash
+cce env add CUSTOM_HEADER
+```
+
+#### 删除环境变量
+
+```bash
+cce env remove  # 交互式选择可删除的变量
+```
+
+**注意**：必需的环境变量（`ANTHROPIC_BASE_URL` 和 `ANTHROPIC_AUTH_TOKEN`）无法删除，因为它们对 API 功能至关重要。
+
 ## 配置结构
 
 所有配置都保存在 `~/.claude-code-env.json` 文件，格式如下：
@@ -103,6 +140,12 @@ cce use kimi-k2
       "ANTHROPIC_MODEL": "moonshotai/Kimi-K2-Instruct"
     }
   ],
-  "currentModel": "claude"
+  "currentModel": "claude",
+  "envVars": [
+    { "key": "ANTHROPIC_BASE_URL", "required": true },
+    { "key": "ANTHROPIC_AUTH_TOKEN", "required": true },
+    { "key": "ANTHROPIC_MODEL", "required": false },
+    { "key": "ANTHROPIC_MAX_TOKENS", "required": false }
+  ]
 }
 ```

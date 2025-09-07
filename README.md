@@ -88,6 +88,43 @@ cce use claude
 cce use kimi-k2
 ```
 
+### Environment Variable Management
+
+CCE now supports dynamic environment variable management, allowing you to customize which variables are used when switching models.
+
+#### View Environment Variables
+
+```bash
+cce env
+```
+
+```
+■ Environment Variables
+
+  1. ANTHROPIC_BASE_URL (required)
+  2. ANTHROPIC_AUTH_TOKEN (required)
+  3. ANTHROPIC_MODEL
+  4. ANTHROPIC_MAX_TOKENS
+
+Commands:
+  cce env add <key>    - Add environment variable
+  cce env remove       - Remove environment variable
+```
+
+#### Add Custom Environment Variables
+
+```bash
+cce env add CUSTOM_HEADER
+```
+
+#### Remove Environment Variables
+
+```bash
+cce env remove  # Interactive selection of removable variables
+```
+
+**Note**: Required environment variables (`ANTHROPIC_BASE_URL` and `ANTHROPIC_AUTH_TOKEN`) cannot be removed as they are essential for API functionality.
+
 ## Configuration Structure
 
 All configurations are saved in the `~/.claude-code-env.json` file with the following format:
@@ -108,6 +145,12 @@ All configurations are saved in the `~/.claude-code-env.json` file with the foll
       "ANTHROPIC_MODEL": "moonshotai/Kimi-K2-Instruct"
     }
   ],
-  "currentModel": "claude"
+  "currentModel": "claude",
+  "envVars": [
+    { "key": "ANTHROPIC_BASE_URL", "required": true },
+    { "key": "ANTHROPIC_AUTH_TOKEN", "required": true },
+    { "key": "ANTHROPIC_MODEL", "required": false },
+    { "key": "ANTHROPIC_MAX_TOKENS", "required": false }
+  ]
 }
 ```

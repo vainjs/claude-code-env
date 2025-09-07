@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import type { ModelConfig } from './types'
-import { includes, map, trim, reduce, forEach, padEnd, repeat } from 'lodash-es'
+import { map, trim, reduce, forEach, padEnd, repeat } from 'lodash-es'
 import { Command } from 'commander'
 import inquirer from 'inquirer'
 import chalk from 'chalk'
@@ -10,7 +10,6 @@ import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import { EnvironmentManager } from './EnvironmentManager'
 import { ConfigManager } from './ConfigManager'
-import { ANTHROPIC_ENV } from './enum'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const packageJson = JSON.parse(
@@ -55,7 +54,7 @@ program
           currentModel?.name === model.name ? chalk.green('●') : ' '
         const name = padEnd(model.name, 24)
         const anthropicModel = model.ANTHROPIC_MODEL
-          ? chalk.cyan(model.ANTHROPIC_MODEL)
+          ? chalk.gray(model.ANTHROPIC_MODEL)
           : chalk.gray('Default')
         console.log(`${isCurrent} ${chalk.white(name)} ${anthropicModel}`)
       })
@@ -85,6 +84,8 @@ program
   .description('Add a new model configuration')
   .action(async () => {
     try {
+      const envVars = configManager.getEnvVars()
+
       const answers = await inquirer.prompt([
         {
           type: 'input',
@@ -92,32 +93,27 @@ program
           message: 'Model name:',
           validate: (input) => trim(input) !== '' || 'Name is required',
         },
-        ...map(ANTHROPIC_ENV, (env) => {
-          if (includes(['ANTHROPIC_BASE_URL', 'ANTHROPIC_AUTH_TOKEN'], env)) {
+        ...map(envVars, (env) => {
+          if (env.required) {
             return {
               type: 'input',
-              name: env,
-              message: `${env}:`,
+              name: env.key,
+              message: `${env.key}:`,
               validate: (input: string) =>
-                trim(input) !== '' || `${env} is required`,
+                trim(input) !== '' || `${env.key} is required`,
             }
           } else {
             return {
               type: 'input',
-              name: env,
-              message: `${env} (optional):`,
+              name: env.key,
+              message: `${env.key} (optional):`,
             }
           }
         }),
-        {
-          type: 'input',
-          name: 'description',
-          message: 'Description (optional):',
-        },
       ])
 
       const model = reduce(
-        ['name', ...ANTHROPIC_ENV, 'description'],
+        ['name', ...map(envVars, 'key')],
         (acc, env) => {
           const v = trim(answers[env])
           return v ? { ...acc, [env]: v } : acc
@@ -272,6 +268,7 @@ program
     try {
       const currentModel = configManager.getCurrentModel()
       const currentEnv = envManager.getCurrentEnvironmentVariables()
+      const envVars = configManager.getEnvVars()
 
       // Config file location
       console.log()
@@ -283,15 +280,10 @@ program
       console.log(chalk.green('■ Current Model'))
       if (currentModel) {
         console.log(`   ${padEnd('Name', 32)} ${chalk.cyan(currentModel.name)}`)
-        console.log(
-          `   ${padEnd('Description', 32)} ${chalk.gray(
-            currentModel.description || 'Not set'
-          )}`
-        )
-        forEach(ANTHROPIC_ENV, (env) => {
-          const v = currentModel[env]
+        forEach(envVars, (env) => {
+          const v = currentModel[env.key]
           console.log(
-            `   ${padEnd(env, 32)} ${v ? chalk.cyan(v) : chalk.gray('Not set')}`
+            `   ${padEnd(env.key, 32)} ${v ? chalk.cyan(v) : chalk.gray('Not set')}`
           )
         })
       } else {
@@ -303,11 +295,11 @@ program
       // Environment variables
       console.log(chalk.green('■ Environment Variables'))
 
-      forEach(ANTHROPIC_ENV, (env) => {
-        const value = currentEnv[env]
+      forEach(envVars, (env) => {
+        const value = currentEnv[env.key]
         const status = value ? chalk.green('✓') : chalk.red('✗')
         const displayValue = value ? chalk.cyan(value) : chalk.gray('Not set')
-        console.log(`   ${status} ${padEnd(env, 30)} ${displayValue}`)
+        console.log(`   ${status} ${padEnd(env.key, 30)} ${displayValue}`)
       })
 
       const hasRequiredVars =
@@ -322,6 +314,154 @@ program
         console.log(chalk.dim('   ↳ Run "cce use <model>" to configure them.'))
       }
       console.log()
+    } catch (error) {
+      console.error(chalk.red('✗ Error:'), error)
+      process.exit(1)
+    }
+  })
+
+// Environment variable management
+const envCommand = program
+  .command('env')
+  .description('Manage environment variables')
+
+envCommand.action(async () => {
+  try {
+    const envVars = configManager.getEnvVars()
+
+    console.log()
+    console.log(chalk.green('■ Environment Variables'))
+    console.log()
+
+    if (envVars.length === 0) {
+      console.log(chalk.yellow('  No environment variables configured.'))
+      console.log(
+        chalk.dim('  ↳ Use "cce env add <key>" to add environment variables')
+      )
+      return
+    }
+
+    envVars.forEach((env, index) => {
+      const requiredLabel = env.required ? chalk.red(' (required)') : ''
+      console.log(`  ${index + 1}. ${chalk.cyan(env.key)}${requiredLabel}`)
+    })
+
+    console.log()
+    console.log(chalk.dim('Commands:'))
+    console.log(chalk.dim('  cce env add <key>    - Add environment variable'))
+    console.log(
+      chalk.dim('  cce env remove       - Remove environment variable')
+    )
+    console.log()
+  } catch (error) {
+    console.error(chalk.red('✗ Error:'), error)
+    process.exit(1)
+  }
+})
+
+envCommand
+  .command('add')
+  .description('Add environment variable')
+  .argument('<key>', 'Environment variable key to add')
+  .action(async (key) => {
+    try {
+      const envVars = configManager.getEnvVars()
+      const exists = envVars.some((env) => env.key === key)
+
+      if (exists) {
+        console.log()
+        console.log(
+          chalk.yellow(`■ Environment variable "${key}" already exists.`)
+        )
+        console.log(
+          chalk.dim(
+            '  ↳ Use "cce env" to see all configured environment variables'
+          )
+        )
+        console.log()
+        return
+      }
+
+      configManager.addEnvVar(key)
+      console.log()
+      console.log(
+        chalk.green(
+          `✓ Environment variable "${chalk.white(key)}" added successfully`
+        )
+      )
+      console.log()
+    } catch (error) {
+      console.error(chalk.red('✗ Error:'), error)
+      process.exit(1)
+    }
+  })
+
+envCommand
+  .command('remove')
+  .alias('rm')
+  .description('Remove environment variable')
+  .action(async () => {
+    try {
+      const envVars = configManager.getEnvVars()
+      const removableEnvVars = envVars.filter((env) => !env.required)
+
+      if (removableEnvVars.length === 0) {
+        console.log()
+        console.log(
+          chalk.yellow('■ No removable environment variables configured.')
+        )
+        console.log(
+          chalk.dim('  ↳ All configured environment variables are required')
+        )
+        console.log()
+        return
+      }
+
+      const { envVarToRemove } = await inquirer.prompt([
+        {
+          type: 'list',
+          name: 'envVarToRemove',
+          message: 'Select environment variable to remove:',
+          choices: removableEnvVars.map((env) => ({
+            name: env.key,
+            value: env.key,
+          })),
+        },
+      ])
+
+      const { confirm } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'confirm',
+          message: `Are you sure you want to remove "${envVarToRemove}"?`,
+          default: false,
+        },
+      ])
+
+      if (confirm) {
+        try {
+          configManager.removeEnvVar(envVarToRemove)
+          console.log()
+          console.log(
+            chalk.green(
+              `✓ Environment variable "${chalk.white(envVarToRemove)}" removed successfully`
+            )
+          )
+          const remainingEnvVars = configManager.getEnvVars()
+          if (remainingEnvVars.filter((env) => !env.required).length === 0) {
+            console.log(
+              chalk.dim(
+                '  ↳ No removable environment variables remaining. Add new ones with "cce env add <key>"'
+              )
+            )
+          }
+          console.log()
+        } catch (error) {
+          console.error(chalk.red('✗ Error:'), (error as Error).message)
+        }
+      } else {
+        console.log(chalk.gray('■ Operation cancelled'))
+      }
     } catch (error) {
       console.error(chalk.red('✗ Error:'), error)
       process.exit(1)
