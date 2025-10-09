@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 
 import type { ModelConfig } from './types'
+import { readFileSync } from 'fs'
+import { dirname, join } from 'path'
+import { fileURLToPath } from 'url'
 import { map, trim, reduce, forEach, padEnd, repeat } from 'lodash-es'
 import { Command } from 'commander'
 import inquirer from 'inquirer'
 import chalk from 'chalk'
-import { readFileSync } from 'fs'
-import { dirname, join } from 'path'
-import { fileURLToPath } from 'url'
 import { EnvironmentManager } from './EnvironmentManager'
 import { ConfigManager } from './ConfigManager'
 
@@ -462,6 +462,30 @@ envCommand
       } else {
         console.log(chalk.gray('■ Operation cancelled'))
       }
+    } catch (error) {
+      console.error(chalk.red('✗ Error:'), error)
+      process.exit(1)
+    }
+  })
+
+program
+  .command('reload')
+  .description(
+    'Reload current model configuration and update environment variables'
+  )
+  .action(async () => {
+    try {
+      const currentModel = configManager.getCurrentModel()
+
+      if (!currentModel) {
+        console.log(chalk.yellow('■ No model currently selected.'))
+        console.log(
+          chalk.dim('  ↳ Run "cce use <model>" to select a model first')
+        )
+        return
+      }
+
+      envManager.setEnvironmentVariables(currentModel)
     } catch (error) {
       console.error(chalk.red('✗ Error:'), error)
       process.exit(1)
