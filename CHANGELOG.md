@@ -1,3 +1,17 @@
+# [0.4.0](https://github.com/vainjs/claude-code-env/compare/v0.3.0...v0.4.0) (2025-10-09)
+
+
+### Bug Fixes
+
+* update fish envPrefix ([f72be42](https://github.com/vainjs/claude-code-env/commit/f72be42dc2e32320fd94b72d3a6b4302f85224e3))
+
+
+### Features
+
+* add [reload] command ([1cf6f53](https://github.com/vainjs/claude-code-env/commit/1cf6f53e20a7d86ce725fbf2c13df76f04d7eebb))
+
+
+
 ## [0.3.1](https://github.com/vainjs/claude-code-env/compare/v0.3.0...v0.3.1) (2025-09-07)
 
 
